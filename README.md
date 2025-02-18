@@ -44,8 +44,8 @@
     程序运行结束后，检测结果会保存在程序所在目录下的 `result.txt` 文件中。  `result.txt` 文件为 CSV 格式，每行代表一个成功检测的 Ollama 服务器，包含两列：服务器 URL 和模型列表，模型名称之间用逗号分隔。 例如：
 
     ```text
-    http://localhost:11434,llama2,mistral,codellama
-    http://your_server_ip:11434,gemma,phi
+    http://localhost:11434,deepseek-r1:14b,deepseek-r1:1.5b
+    http://your_server_ip:11434,qwen2.5:0.5b-instruct-q8_0
     ```
 
     如果服务器检测失败或模型列表为空，则不会在 `result.txt` 中记录，但会在终端输出相应的错误或提示信息。
