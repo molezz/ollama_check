@@ -27,7 +27,7 @@
 
 
 2.  **二进制运行:**
-    release下载对应平台文件， 并在目录下准备 `urls.txt` 的文本文件。
+    [release](https://github.com/molezz/ollama_check/releases/)下载对应平台文件， 并在目录下准备 `urls.txt` 的文本文件。
     直接运行 `ollama_check`
 
 
