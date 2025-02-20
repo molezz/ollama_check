@@ -4,6 +4,8 @@ use tokio::io::AsyncWriteExt;
 use reqwest::Client;
 use serde::Deserialize;
 use std::time::Duration;
+use tokio::sync::Semaphore;
+use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 struct TagsResponse {
@@ -20,7 +22,7 @@ async fn check_ollama_server(client: &Client, url: String) -> Result<(String, Ve
     let tags_url = format!("{}/api/tags", url);
     println!("正在检测: {}", tags_url);
 
-    let response = client.get(&tags_url).timeout(Duration::from_secs(2)).send().await; // 这里也设置超时，虽然 Client 已经设置了，但更明确
+    let response = client.get(&tags_url).timeout(Duration::from_secs(3)).send().await; // 这里也设置超时，虽然 Client 已经设置了，但更明确
     match response {
         Ok(resp) => {
             if resp.status().is_success() {
@@ -49,10 +51,12 @@ async fn check_ollama_server(client: &Client, url: String) -> Result<(String, Ve
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
-    // 创建 ClientBuilder 并设置超时时间为 2 秒
     let client = Client::builder()
-        .timeout(Duration::from_secs(2))
+        .timeout(Duration::from_secs(3))
         .build()?;
+
+    let concurrency_limit = 3000; // 设置并发限制
+    let semaphore = Arc::new(Semaphore::new(concurrency_limit));
 
     let urls_content = fs::read_to_string("urls.txt").await?;
     let urls: Vec<String> = urls_content.lines().map(|line| line.trim().to_string()).collect();
@@ -60,8 +64,13 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     let mut tasks = Vec::new();
     for url in urls {
         let client_clone = client.clone();
+        let semaphore_clone = Arc::clone(&semaphore);
+
         tasks.push(tokio::spawn(async move {
-            check_ollama_server(&client_clone, url).await
+            let permit = semaphore_clone.acquire_owned().await.expect("Failed to acquire semaphore permit");
+            let result = check_ollama_server(&client_clone, url).await;
+            drop(permit);
+            result
         }));
     }
 
