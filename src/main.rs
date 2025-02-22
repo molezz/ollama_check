@@ -55,7 +55,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         .timeout(Duration::from_secs(3))
         .build()?;
 
-    let concurrency_limit = 3000; // 设置并发限制
+    let concurrency_limit = 1500; // 设置并发限制
     let semaphore = Arc::new(Semaphore::new(concurrency_limit));
 
     let urls_content = fs::read_to_string("urls.txt").await?;
